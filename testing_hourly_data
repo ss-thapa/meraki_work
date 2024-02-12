@@ -2,10 +2,13 @@ import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt 
 from prophet import Prophet
+from prophet.plot import plot_plotly, plot_components_plotly
 import numpy as np
 from sklearn.metrics import mean_squared_error, mean_absolute_percentage_error
 from statsmodels.tsa.seasonal import seasonal_decompose
 from statsmodels.graphics.tsaplots import plot_acf,plot_pacf
+import plotly.express as px
+
 
 
 
@@ -35,16 +38,47 @@ final_df =final_df.rename(columns={'created_date_ad':'ds','grand_total':'y'})
 
 final_df['ds'] = final_df['ds'].dt.tz_localize(None)
 
-final_df = final_df.set_index('ds')
+final_df = final_df[final_df['ds'].dt.strftime('%Y-%m-%d') != '2024-02-03']
 
 
+
+
+
+# final_df = final_df.set_index('ds')
+
+# print(final_df)
 
 # result = seasonal_decompose(final_df,model='additive',period=365)
 # result.plot()
 # plt.show()
 
-plot_pacf(final_df)
-plt.show()
+# plot_pacf(final_df)
+# plt.show()
+
+# fig = px.line(data_frame=final_df,x=final_df.index,y=final_df['y'])
+# fig.show()
+
+
+
+
+
+
+mod = Prophet()
+
+model = mod.fit(final_df)
+
+future = model.make_future_dataframe(periods=24*7, freq='h', include_history=False)
+forecast = model.predict(future)
+
+
+
+
+forecast_2024_02_04 = forecast[(forecast['ds'] >= '2024-02-05 00:00:00') & (forecast['ds'] < '2024-02-06 00:00:00')]
+yhat_predicted_for_day = forecast_2024_02_04['yhat'].sum()
+
+print(forecast_2024_02_04)
+
+# print(yhat_predicted_for_day)
 
 
 
@@ -52,14 +86,5 @@ plt.show()
 
 
 
-# mod = Prophet()
-
-# model = mod.fit(final_df)
-
-# future = model.make_future_dataframe(periods=7, freq='D', include_history=False)
-# forecast = model.predict(future)
-
-# print(forecast)
-
-
-
+# fig = plot_plotly(model,forecast)
+# fig.show()
