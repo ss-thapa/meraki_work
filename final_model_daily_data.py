@@ -12,6 +12,7 @@ pd.set_option('display.max_columns', None)
 
 df_sales_main = pd.read_csv('/Users/sunilthapa/Desktop/My_projects/meraki/datas/sales_main.csv')
 
+
 col_name =['created_date_ad','grand_total']
 
 final_df = df_sales_main[col_name]
@@ -42,8 +43,10 @@ mod.add_regressor('holiday')
 
 model = mod.fit(daily_data)
 
+days_to_forecast = 30
+
 # Make future predictions
-future_dates = pd.date_range(start=daily_data['ds'].max()+ pd.Timedelta(days=1), periods=30, freq='D')  # Generate future dates
+future_dates = pd.date_range(start=daily_data['ds'].max()+ pd.Timedelta(days=1), periods=days_to_forecast, freq='D')  # Generate future dates
 future = pd.DataFrame({'ds': future_dates})
 
 # Indicate Saturdays as holidays for future dates
@@ -52,9 +55,7 @@ future['holiday'] = (future['ds'].dt.dayofweek == 5).astype(int)
 # Make predictions
 forecast = model.predict(future)
 
-# print(forecast[['ds', 'yhat']])
+
+forecast[['ds', 'yhat']]
 
 
-model_size = sys.getsizeof(model)
-
-print(f"Estimated size of the Prophet model object: {model_size} bytes")
