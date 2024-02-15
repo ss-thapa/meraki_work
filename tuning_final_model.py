@@ -3,10 +3,14 @@ import seaborn as sns
 import matplotlib.pyplot as plt 
 from prophet import Prophet
 import numpy as np
-from sklearn.metrics import mean_squared_error, mean_absolute_percentage_error, r2_score
+from sklearn.metrics import mean_squared_error, mean_absolute_percentage_error
 import plotly.graph_objs as go
 import plotly.offline as py
-from sklearn.preprocessing import StandardScaler
+from prophet.diagnostics import cross_validation
+from prophet.diagnostics import performance_metrics
+import time
+import itertools 
+
 
 pd.set_option('display.max_columns', None)
 
@@ -34,25 +38,16 @@ daily_data['holiday'] = (daily_data['ds'].dt.dayofweek == 5).astype(int)
 
 
 
-
 #### crossvalidation and error metrics
 
 
-train_data = daily_data[daily_data['ds'] < '2024-01-01']
+train_data = daily_data[daily_data['ds'] < '2024-01-21']
 
-test_data = daily_data[daily_data['ds'] >= '2024-01-01']
-
-# sns.lineplot(x=train_data['ds'],y=train_data['y'])
-# plt.show()
+test_data = daily_data[daily_data['ds'] >= '2024-01-21']
 
 
-# print(train_data)
 
-# sns.boxplot(train_data['y'])
-# plt.show()
-
-
-mod = Prophet()
+mod = Prophet(n_changepoints=35,changepoint_prior_scale=0.1,daily_seasonality=4,weekly_seasonality=4,seasonality_prior_scale=20)
 
 mod.add_regressor('holiday')
 
@@ -72,15 +67,14 @@ forecast = model.predict(future)
 
 forecast_values = forecast[-len(test_data):]['yhat']
 
+print(forecast)
 
+### mape matrics
 
-## using different matrics
+# mape = mean_absolute_percentage_error(test_data['y'], forecast_values)
 
+# print(mape)
 
-
-mape = mean_absolute_percentage_error(test_data['y'], forecast_values)
-
-print(mape)
 
 
 
@@ -101,3 +95,75 @@ print(mape)
 
 
 
+
+
+
+
+## cross validation 
+
+
+# # Initialize Prophet model
+# model = Prophet(changepoint_prior_scale=0.2505,seasonality_prior_scale=2.5075)
+# model.add_regressor('holiday')
+# model.fit(daily_data)
+
+
+# # Perform cross-validation
+# df_cv = cross_validation(model, horizon='30 days', initial='210 days', period='30 days')
+
+# # Compute performance metrics
+# df_metrics = performance_metrics(df_cv)
+# print(df_metrics.head())
+
+
+
+
+
+
+
+
+
+
+
+# changepoint_prior_scale_range = np.linspace(0.001, 0.5, num=2).tolist()
+
+# seasonality_prior_scale_range = np.linspace(0.01, 10, num=2).tolist()
+
+# holidays_prior_scale_range = np.linspace(0.01, 10, num=2).tolist()
+
+
+# category_df = daily_data.copy()
+# category_df.columns = ["ds", "y"]
+# category_df[["y"]] = category_df[["y"]].apply(pd.to_numeric)
+# category_df["ds"] = pd.to_datetime(category_df["ds"])
+
+# # Start timer
+# start_time = time.time()
+
+# # Initialize dictionary to store results
+# dicts = {}
+
+# # Generate all combinations of hyperparameters
+# param_grid = {
+#     "changepoint_prior_scale": changepoint_prior_scale_range,
+#     "seasonality_prior_scale": seasonality_prior_scale_range
+# }
+# all_params = [dict(zip(param_grid.keys(), v)) for v in itertools.product(*param_grid.values())]
+
+
+
+# mapes = []
+# for params in all_params:
+#     m = Prophet(**params).fit(category_df)  # Fit model with given params
+#     df_cv = cross_validation(m, initial="180 days", period="30 days", horizon="30 days")  # Perform cross-validation
+#     df_p = df_cv.groupby('cutoff').apply(performance_metrics, rolling_window=1)
+#     mapes.append(df_p["mape"].values.mean())
+
+# # Find the best parameters
+# tuning_results = pd.DataFrame(all_params)
+# tuning_results["mape"] = mapes
+# best_params = tuning_results.sort_values("mape").iloc[0].to_dict()
+
+# # Print the best parameters and time taken
+# print("Best Parameters:", best_params)
+# print("Time taken:", time.time() - start_time)

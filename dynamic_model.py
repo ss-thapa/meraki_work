@@ -5,6 +5,7 @@ from prophet import Prophet
 import numpy as np
 from sklearn.metrics import mean_squared_error, mean_absolute_percentage_error
 import sys
+from prophet.plot import plot,add_changepoints_to_plot
 
 pd.set_option('display.max_columns', None)
 
@@ -29,7 +30,10 @@ daily_data = daily_data[daily_data['ds'].dt.strftime('%Y-%m-%d') != '2024-02-03'
 
 daily_data['holiday'] = (daily_data['ds'].dt.dayofweek == 5).astype(int)
 
-mod = Prophet(weekly_seasonality=20,daily_seasonality=3)
+
+
+
+mod = Prophet(changepoint_prior_scale=0.1)
 
 mod.add_regressor('holiday')
 
@@ -49,6 +53,21 @@ forecast = model.predict(future)
 
 
 forecast[['ds', 'yhat']]
+
+
+
+
+change_points = model.changepoints
+
+# Plot the data along with the change points
+plt.figure(figsize=(10, 6))
+plt.plot(daily_data['ds'], daily_data['y'], label='Actual Data')
+plt.vlines(change_points, ymin=daily_data['y'].min(), ymax=daily_data['y'].max(), colors='r', linestyles='dashed', label='Change Points')
+plt.xlabel('Date')
+plt.ylabel('Value')
+plt.title('Change Points Detected by Prophet')
+plt.legend()
+plt.show()
 
 
 
