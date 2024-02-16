@@ -8,8 +8,7 @@ import plotly.graph_objs as go
 import plotly.offline as py
 from prophet.diagnostics import cross_validation
 from prophet.diagnostics import performance_metrics
-import time
-import itertools 
+
 
 
 pd.set_option('display.max_columns', None)
@@ -41,13 +40,13 @@ daily_data['holiday'] = (daily_data['ds'].dt.dayofweek == 5).astype(int)
 #### crossvalidation and error metrics
 
 
-train_data = daily_data[daily_data['ds'] < '2024-01-21']
+train_data = daily_data[daily_data['ds'] < '2024-01-15']
 
-test_data = daily_data[daily_data['ds'] >= '2024-01-21']
+test_data = daily_data[daily_data['ds'] >= '2024-01-15']
 
 
 
-mod = Prophet(n_changepoints=35,changepoint_prior_scale=0.1,daily_seasonality=4,weekly_seasonality=4,seasonality_prior_scale=20)
+mod = Prophet(n_changepoints=35,changepoint_prior_scale=0.1,daily_seasonality=False,yearly_seasonality=False,weekly_seasonality=False,seasonality_prior_scale=0)
 
 mod.add_regressor('holiday')
 
@@ -56,7 +55,7 @@ model = mod.fit(train_data)
 days_to_forecast = len(test_data)
 
 # Make future predictions
-future_dates = pd.date_range(start=train_data['ds'].max() + pd.Timedelta(days=1), periods=days_to_forecast, freq='D')  # Generate future dates
+future_dates = pd.date_range(start=train_data['ds'].max() + pd.Timedelta(days=1), periods=days_to_forecast, freq='D')
 future = pd.DataFrame({'ds': future_dates})
 
 # Indicate Saturdays as holidays for future dates
@@ -67,13 +66,12 @@ forecast = model.predict(future)
 
 forecast_values = forecast[-len(test_data):]['yhat']
 
-print(forecast)
 
 ### mape matrics
 
-# mape = mean_absolute_percentage_error(test_data['y'], forecast_values)
+mape = mean_absolute_percentage_error(test_data['y'], forecast_values)
 
-# print(mape)
+print(mape)
 
 
 
