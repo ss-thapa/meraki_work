@@ -165,3 +165,29 @@ print(mape)
 # # Print the best parameters and time taken
 # print("Best Parameters:", best_params)
 # print("Time taken:", time.time() - start_time)
+
+
+
+
+
+
+
+
+
+
+
+
+
+# df = pd.DataFrame({'dates': dates, 'values': values})
+# df['dates'] = pd.to_datetime(df['dates'])
+# df.set_index('dates', inplace=True)
+
+# # Plot the time series
+# plt.figure(figsize=(10, 6))
+# plt.plot(df.index, df['values'], label='Time Series Data')
+# plt.xlabel('Date')
+# plt.ylabel('Values')
+# plt.title('Time Series Plot with Seasonality')
+# plt.legend()
+# plt.grid(True)
+# plt.show()
