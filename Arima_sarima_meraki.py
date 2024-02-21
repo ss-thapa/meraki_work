@@ -6,6 +6,8 @@ from statsmodels.tsa.stattools import adfuller
 pd.set_option('display.max_columns', None)
 from statsmodels.tsa.arima.model import ARIMA
 from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
+from sklearn.metrics import mean_squared_error, mean_absolute_percentage_error
+import itertools
 
 
 
@@ -48,17 +50,7 @@ def test_stationarity(dataFrame, var):
     plt.show()
 
 
-log_shift = daily_data[['grand_total']].copy(deep=True)
-log_shift['log'] = np.log(log_shift['grand_total'])
-log_shift['logShift'] = log_shift['log'].shift()
-log_shift['logShiftDiff'] = log_shift['log'] - log_shift['logShift']
-# print(log_shift.head())
 
-
-# In[25]:
-
-
-# test_stationarity(log_shift.dropna(),'logShiftDiff')
 
 
 
@@ -72,9 +64,6 @@ log_shift['logShiftDiff'] = log_shift['log'] - log_shift['logShift']
 # plt.show()
 
 
-p = 1
-d = 0
-q = 3
 
 
 train_data = daily_data[daily_data.index < '2024-01-15']
@@ -83,14 +72,54 @@ test_data = daily_data[daily_data.index >= '2024-01-15']
 
 test_data = test_data.drop('2024-02-03')
 
+train_data = train_data[['grand_total']].copy(deep=True)
+train_data['log'] = np.log(train_data['grand_total'])
+train_data['logShift'] = train_data['log'].shift()
+train_data['logShiftDiff'] = train_data['log'] - train_data['logShift']
 
 
-model = ARIMA(test_data['grand_total'], order= (1,0,3))
 
-model_fit = model.fit()
 
-print(model_fit)
-# prediction = model_fit.predict(start = test_data.index[0], end = test_data.index[-1])
+# print(train_data)
 
-# print(prediction)
+# p=d=q= range()
+# pdq = list(itertools.product(p,d,q))
+
+# for param in pdq:
+#     try:
+#         model_arima = ARIMA(train_data['logShiftDiff'],order=param)
+#         model_arima_fit = model_arima.fit()
+#         print(param,model_arima_fit.aic)
+#     except:
+#         continue
+
+
+
+
+# plot_acf(train_data['logShiftDiff'])
+# plt.title('Autocorrelation Function (ACF)')
+# plt.show()
+
+# plot_pacf(train_data['logShiftDiff'], lags=50)
+# plt.title('Partial Autocorrelation Function (PACF)')
+# plt.show()
+
+
+
+
+
+
+model = ARIMA(train_data['logShift'],order=(20,1,5))
+
+model_result = model.fit()
+
+
+prediction = model_result.predict(start = test_data.index[0], end = test_data.index[-1],dynamic=False)
+y_pred_original_scale = np.exp(prediction)
+
+
+# mape = mean_absolute_percentage_error(test_data['grand_total'],y_pred_original_scale)
+
+# print(mape)
+
 
